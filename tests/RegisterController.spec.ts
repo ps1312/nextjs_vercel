@@ -1,32 +1,34 @@
-import RegisterController from "../controllers/RegisterController";
+import RegisterController, { MissingParamError } from "../controllers/RegisterController";
 
 describe("RegisterController.ts", () => {
-  it("should return BAD REQUEST status and a message on missing email", () => {
+  it("should return BAD REQUEST status and a MissingParam error on missing email", () => {
     const sut = new RegisterController();
 
     const result = sut.process({});
 
-    expect(result.statusCode).toEqual(400);
-    expect(result.body).toEqual("Missing parameters: Email");
+    expectError(result, new MissingParamError('Email'))
   });
 
-  it("should return BAD REQUEST status and a message on missing password", () => {
+  it("should return BAD REQUEST status and a MissingParam error on missing password", () => {
     const sut = new RegisterController();
 
     const result = sut.process({ email: 'any-email@mail.com' });
 
-    expect(result.statusCode).toEqual(400);
-    expect(result.body).toEqual("Missing parameters: Password");
+    expectError(result, new MissingParamError('Password'))
   });
 
-  it("should return BAD REQUEST status and a message on missing passwordConfirmation", () => {
+  it("should return BAD REQUEST status and a MissingParam error on missing passwordConfirmation", () => {
     const sut = new RegisterController();
 
     const result = sut.process({ email: 'any-email@mail.com', password: 'any password' });
 
-    expect(result.statusCode).toEqual(400);
-    expect(result.body).toEqual("Missing parameters: Password Confirmation");
+    expectError(result, new MissingParamError('Password Confirmation'))
   });
+
+  function expectError(result: RegisterController.Result, error: Error) {
+    expect(result.statusCode).toEqual(400);
+    expect(result.error).toEqual(error);
+  }
 });
 
 export { };
