@@ -1,4 +1,5 @@
-import RegisterController, { MissingParamError, InvalidEmailError } from "../controllers/RegisterController";
+import RegisterController, { InvalidEmailError } from "../controllers/RegisterController";
+import { MissingParamError } from "../validators/MissingParamsValidator";
 
 describe("RegisterController.ts", () => {
   it("should return BAD REQUEST status and a MissingParam error on missing params", () => {
