@@ -2,15 +2,16 @@ export class MissingParamError extends Error { }
 
 class RegisterController {
   process(body: any): RegisterController.Result {
-    if (!body.email) {
-      return { statusCode: 400, error: new MissingParamError('Email') };
-    }
+    const requiredParams = ['email', 'password', 'passwordConfirmation']
+    let missingParams: string[] = [];
+    requiredParams.forEach((p) => {
+      if (!body[p]) missingParams.push(p)
+    })
 
-    if (!body.password) {
-      return { statusCode: 400, error: new MissingParamError('Password') };
-    }
-
-    return { statusCode: 400, error: new MissingParamError('Password Confirmation') };
+    return {
+      statusCode: 400,
+      error: new MissingParamError(missingParams.join(', ')),
+    };
   }
 }
 
