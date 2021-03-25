@@ -1,10 +1,12 @@
-import { useState } from "react"
-
-const useApi = () => {
-  const [loading, setLoading] = useState(false)
-  const [data, setData] = useState(null)
-
-  return [data, loading]
+interface HTTPClient {
+  get: () => void
 }
 
-export default useApi
+type useAPIResult = [loading: boolean, data?: any, error?: Error]
+
+const useAPI = (client: HTTPClient): useAPIResult => {
+  return [false, undefined, undefined]
+}
+
+export default useAPI
+export type { HTTPClient }
