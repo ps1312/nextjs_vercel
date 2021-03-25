@@ -12,8 +12,8 @@ export class InvalidEmailError implements Error {
   message: string = "Invalid email provided";
 }
 
-class RegisterController {
-  process(body: any): RegisterController.Result {
+class MissingParamsValidator {
+  static validate(body: any): string[] {
     const requiredParams = ['email', 'password', 'passwordConfirmation']
     let missingParams: string[] = [];
     requiredParams.forEach((p) => {
@@ -21,16 +21,20 @@ class RegisterController {
     })
 
     if (missingParams.length > 0) {
-      return {
-        statusCode: 400,
-        error: new MissingParamError(missingParams.join(', ')),
-      };
+      throw new MissingParamError(missingParams.join(', '))
     }
+    return missingParams
+  }
+}
 
-    return {
-      statusCode: 400,
-      error: new InvalidEmailError(),
-    };
+class RegisterController {
+  process(body: any): RegisterController.Result {
+    try {
+      MissingParamsValidator.validate(body)
+      return { statusCode: 400, error: new InvalidEmailError() };
+    } catch (error) {
+      return { statusCode: 400, error };
+    }
   }
 }
 
