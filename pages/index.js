@@ -1,18 +1,13 @@
 import Head from "next/head";
-import { useState, useEffect } from "react";
+import useSWR from "swr";
+
+const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 export default function Home() {
-  const [post, setPost] = useState({});
+  const { data, error } = useSWR("/api/todos", fetcher);
 
-  useEffect(() => {
-    async function makeRequest() {
-      const response = await fetch("/api/hello");
-      const data = await response.json();
-      setPost(data);
-    }
-
-    makeRequest();
-  }, []);
+  if (error) return <div>failed to load</div>;
+  if (!data) return <div>loading...</div>;
 
   return (
     <div>
@@ -21,10 +16,14 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <span>{post.userId}</span>
-      <span>{post.id}</span>
-      <span>{post.title}</span>
-      <span>{post.body}</span>
+      {data.todos.map((todo) => {
+        return (
+          <div key={todo.id}>
+            <span>{todo.id}</span>
+            <span>{todo.title}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
