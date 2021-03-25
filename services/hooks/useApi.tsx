@@ -1,10 +1,11 @@
 interface HTTPClient {
-  get: () => void
+  get: (url: URL) => void
 }
 
 type useAPIResult = [loading: boolean, data?: any, error?: Error]
 
-const useAPI = (client: HTTPClient): useAPIResult => {
+const useAPI = (url: URL, client: HTTPClient): useAPIResult => {
+  client.get(url)
   return [false, undefined, undefined]
 }
 
