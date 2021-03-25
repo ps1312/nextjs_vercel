@@ -1,4 +1,4 @@
-import RegisterController, { MissingParamError } from "../controllers/RegisterController";
+import RegisterController, { MissingParamError, InvalidEmailError } from "../controllers/RegisterController";
 
 describe("RegisterController.ts", () => {
   it("should return BAD REQUEST status and a MissingParam error on missing params", () => {
@@ -17,10 +17,17 @@ describe("RegisterController.ts", () => {
     expectError(sut, missingAllParamsBody, new MissingParamError('email, password, passwordConfirmation'))
   });
 
+  it('should return BAD REQUEST status and a InvalidEmailError on invalid email', () => {
+    const sut = new RegisterController();
+
+    const invalidEmailBody = makeBody({ email: 'invalid email' })
+    expectError(sut, invalidEmailBody, new InvalidEmailError())
+  })
+
   function expectError(sut: RegisterController, body: any, error: Error) {
     const result = sut.process(body);
     expect(result.statusCode).toEqual(400);
-    expect(result.error).toEqual(error);
+    expect(result.error).toStrictEqual(error);
   }
 
   function makeBody(overrides: any): any {

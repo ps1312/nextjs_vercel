@@ -1,4 +1,16 @@
-export class MissingParamError extends Error { }
+export class MissingParamError implements Error {
+  name: string = "MissingParamError";
+  message: string;
+
+  constructor(message: string) {
+    this.message = message
+  }
+}
+
+export class InvalidEmailError implements Error {
+  name: string = "InvalidEmailError";
+  message: string = "Invalid email provided";
+}
 
 class RegisterController {
   process(body: any): RegisterController.Result {
@@ -8,9 +20,16 @@ class RegisterController {
       if (!body[p]) missingParams.push(p)
     })
 
+    if (missingParams.length > 0) {
+      return {
+        statusCode: 400,
+        error: new MissingParamError(missingParams.join(', ')),
+      };
+    }
+
     return {
       statusCode: 400,
-      error: new MissingParamError(missingParams.join(', ')),
+      error: new InvalidEmailError(),
     };
   }
 }
