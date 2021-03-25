@@ -1,13 +1,8 @@
 import Head from "next/head";
-import useSWR from "swr";
-
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
+import useApi from "../services/hooks/useApi";
 
 export default function Home() {
-  const { data, error } = useSWR("/api/todos", fetcher);
-
-  if (error) return <div>failed to load</div>;
-  if (!data) return <div>loading...</div>;
+  const [data, loading] = useApi()
 
   return (
     <div>
@@ -16,14 +11,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {data.todos.map((todo) => {
-        return (
-          <div key={todo.id}>
-            <span>{todo.id}</span>
-            <span>{todo.title}</span>
-          </div>
-        );
-      })}
+      {loading}
     </div>
   );
 }
