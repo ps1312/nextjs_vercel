@@ -1,4 +1,4 @@
-import MissingParamsValidator, { MissingParamError } from "../validators/MissingParamsValidator"
+import MissingParamsValidator, { MissingParamError } from "../../server/validators/MissingParamsValidator"
 
 describe('MissingParamsValidator.ts', () => {
   it('should throw if body does not have all required params', () => {
