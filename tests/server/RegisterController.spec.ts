@@ -1,8 +1,9 @@
-import RegisterController, { Encryptor } from "../../server/controllers/RegisterController";
+import RegisterController from "../../server/controllers/RegisterController";
 import InternalServerError from "../../server/errors/InternalServerError";
 import InvalidEmailError from "../../server/errors/InvalidEmailError";
 import MissingParamError from "../../server/errors/MissingParamsError";
-import Validation from "../../server/validators/Validation";
+import EncryptorSpy from "./helpers/EncryptorSpy";
+import RegisterControllerValidationSpy from "./helpers/RegisterControllerValidationSpy";
 
 describe("RegisterController.ts", () => {
   it('should call validation with provided body', () => {
@@ -54,37 +55,6 @@ describe("RegisterController.ts", () => {
     return [sut, validation, encryptor]
   }
 
-  class RegisterControllerValidationSpy implements Validation {
-    bodyToValidate: any
-    toThrow?: Error
-
-    validate(body: any) {
-      this.bodyToValidate = body
-      if (this.toThrow) {
-        throw this.toThrow
-      }
-    }
-
-    completeWith(error: Error) {
-      this.toThrow = error
-    }
-  }
-
-  class EncryptorSpy implements Encryptor {
-    passwordToEncrypt?: string
-    toThrow?: Error
-
-    crypt(password: string) {
-      this.passwordToEncrypt = password
-      if (this.toThrow) {
-        throw new InternalServerError()
-      }
-    }
-
-    completeWith(error: Error) {
-      this.toThrow = error
-    }
-  }
 
   function expectError(sut: RegisterController, body: any, error: Error, statusCode: number) {
     const result = sut.process(body);
