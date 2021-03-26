@@ -1,9 +1,9 @@
-import RegisterController, { InvalidEmailError } from "../controllers/RegisterController";
+import RegisterController, { Encryptor, InternalServerError, InvalidEmailError } from "../controllers/RegisterController";
 import { MissingParamError } from "../validators/MissingParamsValidator";
 
 describe("RegisterController.ts", () => {
   it("should return BAD REQUEST status and a MissingParam error on missing params", () => {
-    const sut = makeSUT();
+    const [sut] = makeSUT();
 
     const missingEmailBody = makeBody({ email: undefined })
     expectError(sut, missingEmailBody, new MissingParamError('email'))
@@ -19,15 +19,36 @@ describe("RegisterController.ts", () => {
   });
 
   it('should return BAD REQUEST status and a InvalidEmailError on invalid email', () => {
-    const sut = makeSUT();
+    const [sut] = makeSUT();
 
     const invalidEmailBody = makeBody({ email: 'invalid email' })
     expectError(sut, invalidEmailBody, new InvalidEmailError())
   })
 
-  function makeSUT(): RegisterController {
-    const sut = new RegisterController();
-    return sut
+  it('should return INTERNAL SERVER ERROR status and InternalServerError on password encryption failure', () => {
+    const [sut, encryptor] = makeSUT();
+    encryptor.toThrow = true
+
+    const result = sut.process(makeBody())
+
+    expect(result.statusCode).toEqual(500)
+    expect(result.error).toEqual(new InternalServerError())
+  })
+
+  function makeSUT(): [sut: RegisterController, encryptor: EncryptorSpy] {
+    const encryptor = new EncryptorSpy()
+    const sut = new RegisterController(encryptor);
+    return [sut, encryptor]
+  }
+
+  class EncryptorSpy implements Encryptor {
+    toThrow: boolean = false
+
+    crypt() {
+      if (this.toThrow) {
+        throw new InternalServerError()
+      }
+    }
   }
 
   function expectError(sut: RegisterController, body: any, error: Error) {
