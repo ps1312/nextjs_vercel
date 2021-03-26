@@ -2,33 +2,27 @@ import RegisterController, { Encryptor } from "../../server/controllers/Register
 import InternalServerError from "../../server/errors/InternalServerError";
 import InvalidEmailError from "../../server/errors/InvalidEmailError";
 import MissingParamError from "../../server/errors/MissingParamsError";
+import Validation from "../../server/validators/Validation";
 
 describe("RegisterController.ts", () => {
-  it("should return BAD REQUEST status and a MissingParam error on missing params", () => {
-    const [sut] = makeSUT();
+  it("should return BAD REQUEST on MissingParamError validation error", () => {
+    const [sut, validation] = makeSUT();
+    const expectedError = new MissingParamError('email')
+    validation.completeWith(expectedError)
 
-    const missingEmailBody = makeBody({ email: undefined })
-    expectError(sut, missingEmailBody, new MissingParamError('email'))
-
-    const missingPasswordBody = makeBody({ password: undefined })
-    expectError(sut, missingPasswordBody, new MissingParamError('password'))
-
-    const missingPasswordConfirmation = makeBody({ passwordConfirmation: undefined })
-    expectError(sut, missingPasswordConfirmation, new MissingParamError('passwordConfirmation'))
-
-    const missingAllParamsBody = makeBody({ email: undefined, password: undefined, passwordConfirmation: undefined })
-    expectError(sut, missingAllParamsBody, new MissingParamError('email, password, passwordConfirmation'))
+    expectError(sut, makeBody(), expectedError, 400)
   });
 
-  it('should return BAD REQUEST status and a InvalidEmailError on invalid email', () => {
-    const [sut] = makeSUT();
+  it('should return BAD REQUEST on InvalidEmailError validation error', () => {
+    const [sut, validation] = makeSUT();
+    const expectedError = new InvalidEmailError()
+    validation.completeWith(expectedError)
 
-    const invalidEmailBody = makeBody({ email: 'invalid email' })
-    expectError(sut, invalidEmailBody, new InvalidEmailError())
+    expectError(sut, makeBody(), expectedError, 400)
   })
 
   it('should call encryptor with provided password', () => {
-    const [sut, encryptor] = makeSUT();
+    const [sut, _, encryptor] = makeSUT();
 
     const body = makeBody()
     sut.process(makeBody())
@@ -37,24 +31,37 @@ describe("RegisterController.ts", () => {
   })
 
   it('should return INTERNAL SERVER ERROR status and InternalServerError on password encryption failure', () => {
-    const [sut, encryptor] = makeSUT();
-    encryptor.toThrow = true
+    const [sut, _, encryptor] = makeSUT();
+    encryptor.completeWith(anyError())
 
-    const result = sut.process(makeBody())
-
-    expect(result.statusCode).toEqual(500)
-    expect(result.error).toEqual(new InternalServerError())
+    expectError(sut, makeBody(), new InternalServerError(), 500)
   })
 
-  function makeSUT(): [sut: RegisterController, encryptor: EncryptorSpy] {
+  function makeSUT(): [sut: RegisterController, validation: RegisterControllerValidationSpy, encryptor: EncryptorSpy] {
+    const validation = new RegisterControllerValidationSpy()
     const encryptor = new EncryptorSpy()
-    const sut = new RegisterController(encryptor);
-    return [sut, encryptor]
+    const sut = new RegisterController(validation, encryptor);
+
+    return [sut, validation, encryptor]
+  }
+
+  class RegisterControllerValidationSpy implements Validation {
+    toThrow?: Error
+
+    validate() {
+      if (this.toThrow) {
+        throw this.toThrow
+      }
+    }
+
+    completeWith(error: Error) {
+      this.toThrow = error
+    }
   }
 
   class EncryptorSpy implements Encryptor {
     passwordToEncrypt?: string
-    toThrow: boolean = false
+    toThrow?: Error
 
     crypt(password: string) {
       this.passwordToEncrypt = password
@@ -62,12 +69,20 @@ describe("RegisterController.ts", () => {
         throw new InternalServerError()
       }
     }
+
+    completeWith(error: Error) {
+      this.toThrow = error
+    }
   }
 
-  function expectError(sut: RegisterController, body: any, error: Error) {
+  function expectError(sut: RegisterController, body: any, error: Error, statusCode: number) {
     const result = sut.process(body);
-    expect(result.statusCode).toEqual(400);
+    expect(result.statusCode).toEqual(statusCode);
     expect(result.error).toStrictEqual(error);
+  }
+
+  function anyError(): Error {
+    return new Error()
   }
 
   function makeBody(overrides: any = undefined): any {
