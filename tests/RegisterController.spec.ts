@@ -25,6 +25,15 @@ describe("RegisterController.ts", () => {
     expectError(sut, invalidEmailBody, new InvalidEmailError())
   })
 
+  it('should call encryptor with provided password', () => {
+    const [sut, encryptor] = makeSUT();
+
+    const body = makeBody()
+    sut.process(makeBody())
+
+    expect(encryptor.passwordToEncrypt).toEqual(body['password'])
+  })
+
   it('should return INTERNAL SERVER ERROR status and InternalServerError on password encryption failure', () => {
     const [sut, encryptor] = makeSUT();
     encryptor.toThrow = true
@@ -42,9 +51,11 @@ describe("RegisterController.ts", () => {
   }
 
   class EncryptorSpy implements Encryptor {
+    passwordToEncrypt?: string
     toThrow: boolean = false
 
-    crypt() {
+    crypt(password: string) {
+      this.passwordToEncrypt = password
       if (this.toThrow) {
         throw new InternalServerError()
       }

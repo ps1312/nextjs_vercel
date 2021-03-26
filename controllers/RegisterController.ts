@@ -1,7 +1,7 @@
 import MissingParamsValidator from "../validators/MissingParamsValidator";
 
 export interface Encryptor {
-  crypt: () => void
+  crypt: (password: string) => void
 }
 
 export class InvalidEmailError implements Error {
@@ -23,7 +23,7 @@ class RegisterController {
     try {
       const requiredParams = ['email', 'password', 'passwordConfirmation']
       MissingParamsValidator.validate(body, requiredParams)
-      this.encryptor.crypt()
+      this.encryptor.crypt(body['password'])
       return { statusCode: 400, error: new InvalidEmailError() };
     } catch (error) {
       if (error instanceof InternalServerError) {
