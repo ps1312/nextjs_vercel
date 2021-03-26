@@ -1,5 +1,7 @@
-import RegisterController, { InvalidEmailError, InternalServerError, Encryptor } from "../../server/controllers/RegisterController";
-import { MissingParamError } from "../../server/validators/MissingParamsValidator";
+import RegisterController, { Encryptor } from "../../server/controllers/RegisterController";
+import InternalServerError from "../../server/errors/InternalServerError";
+import InvalidEmailError from "../../server/errors/InvalidEmailError";
+import MissingParamError from "../../server/errors/MissingParamsError";
 
 describe("RegisterController.ts", () => {
   it("should return BAD REQUEST status and a MissingParam error on missing params", () => {

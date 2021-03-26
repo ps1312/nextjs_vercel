@@ -1,17 +1,9 @@
+import InternalServerError from "../errors/InternalServerError";
+import InvalidEmailError from "../errors/InvalidEmailError";
 import MissingParamsValidator from "../validators/MissingParamsValidator";
 
 export interface Encryptor {
   crypt: (password: string) => void
-}
-
-export class InvalidEmailError implements Error {
-  name: string = "InvalidEmailError";
-  message: string = "Invalid email provided";
-}
-
-export class InternalServerError implements Error {
-  name: string = "InternalServerError";
-  message: string = "Internal server error";
 }
 
 class RegisterController {
