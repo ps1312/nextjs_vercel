@@ -1,3 +1,3 @@
 export default interface Validation {
-  validate: () => void
+  validate: (body: any) => void
 }

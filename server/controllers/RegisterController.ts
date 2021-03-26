@@ -1,6 +1,5 @@
 import InternalServerError from "../errors/InternalServerError";
 import InvalidEmailError from "../errors/InvalidEmailError";
-import MissingParamsValidator from "../validators/MissingParamsValidator";
 import Validation from "../validators/Validation";
 
 export interface Encryptor {
@@ -15,7 +14,7 @@ class RegisterController {
 
   process(body: any): RegisterController.Result {
     try {
-      this.validation.validate()
+      this.validation.validate(body)
       this.encryptor.crypt(body['password'])
 
       return { statusCode: 400, error: new InvalidEmailError() };

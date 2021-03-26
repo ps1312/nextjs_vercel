@@ -5,6 +5,15 @@ import MissingParamError from "../../server/errors/MissingParamsError";
 import Validation from "../../server/validators/Validation";
 
 describe("RegisterController.ts", () => {
+  it('should call validation with provided body', () => {
+    const [sut, validation] = makeSUT();
+
+    const body = makeBody()
+    sut.process(makeBody())
+
+    expect(validation.bodyToValidate).toStrictEqual(body)
+  })
+
   it("should return BAD REQUEST on MissingParamError validation error", () => {
     const [sut, validation] = makeSUT();
     const expectedError = new MissingParamError('email')
@@ -46,9 +55,11 @@ describe("RegisterController.ts", () => {
   }
 
   class RegisterControllerValidationSpy implements Validation {
+    bodyToValidate: any
     toThrow?: Error
 
-    validate() {
+    validate(body: any) {
+      this.bodyToValidate = body
       if (this.toThrow) {
         throw this.toThrow
       }
