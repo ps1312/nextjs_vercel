@@ -2,6 +2,7 @@ import RegisterController from "../../server/controllers/RegisterController";
 import InternalServerError from "../../server/errors/InternalServerError";
 import InvalidEmailError from "../../server/errors/InvalidEmailError";
 import MissingParamError from "../../server/errors/MissingParamsError";
+import PasswordMatchError from "../../server/errors/PasswordMatchError";
 import EncryptorSpy from "./helpers/EncryptorSpy";
 import RegisterControllerValidationSpy from "./helpers/RegisterControllerValidationSpy";
 
@@ -10,7 +11,7 @@ describe("RegisterController.ts", () => {
     const [sut, validation] = makeSUT();
 
     const body = makeBody()
-    sut.process(makeBody())
+    sut.process(body)
 
     expect(validation.bodyToValidate).toStrictEqual(body)
   })
@@ -26,6 +27,14 @@ describe("RegisterController.ts", () => {
   it('should return BAD REQUEST on InvalidEmailError validation error', () => {
     const [sut, validation] = makeSUT();
     const expectedError = new InvalidEmailError()
+    validation.completeWith(expectedError)
+
+    expectError(sut, makeBody(), expectedError, 400)
+  })
+
+  it('should return BAD REQUEST on PasswordMatchError validation error', () => {
+    const [sut, validation] = makeSUT();
+    const expectedError = new PasswordMatchError()
     validation.completeWith(expectedError)
 
     expectError(sut, makeBody(), expectedError, 400)
