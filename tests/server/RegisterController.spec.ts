@@ -1,7 +1,8 @@
 import RegisterController from "../../server/controllers/RegisterController";
 import InternalServerError from "../../server/errors/InternalServerError";
 import EncryptorSpy from "./helpers/EncryptorSpy";
-import RegisterControllerValidationSpy from "./helpers/RegisterControllerValidationSpy";
+import UserStoreSpy from "./helpers/UserStoreSpy";
+import ValidationSpy from "./helpers/VaidationSpy";
 
 describe("RegisterController.ts", () => {
   it('should call validation with provided body', () => {
@@ -13,7 +14,7 @@ describe("RegisterController.ts", () => {
     expect(validation.bodyToValidate).toStrictEqual(body)
   })
 
-  it("should return BAD REQUEST and validation error on invalid request", () => {
+  it("should return BAD REQUEST on validation error", () => {
     const [sut, validation] = makeSUT();
     const expectedError = anyError()
     validation.completeWith(expectedError)
@@ -37,17 +38,33 @@ describe("RegisterController.ts", () => {
     expectError(sut, makeBody(), new InternalServerError(), 500)
   })
 
-  function makeSUT(): [sut: RegisterController, validation: RegisterControllerValidationSpy, encryptor: EncryptorSpy] {
-    const validation = new RegisterControllerValidationSpy()
-    const encryptor = new EncryptorSpy()
-    const sut = new RegisterController(validation, encryptor);
+  it('should call userStore with provided email and encrypted password', () => {
+    const [sut, _, encryptor, store] = makeSUT();
+    const body = makeBody()
+    const hashedPassword = 'any-hashed-password'
+    encryptor.completeWithSuccess(hashedPassword)
 
-    return [sut, validation, encryptor]
+    sut.process(makeBody())
+
+    const expectedUser = {
+      email: body['email'],
+      password: hashedPassword,
+    }
+    expect(store.userToStore).toStrictEqual(expectedUser)
+  })
+
+  function makeSUT(): [sut: RegisterController, validation: ValidationSpy, encryptor: EncryptorSpy, store: UserStoreSpy] {
+    const validation = new ValidationSpy()
+    const encryptor = new EncryptorSpy()
+    const store = new UserStoreSpy()
+    const sut = new RegisterController(validation, encryptor, store);
+
+    return [sut, validation, encryptor, store]
   }
 
 
   function expectError(sut: RegisterController, body: any, error: Error, statusCode: number) {
-    const result = sut.process(body);
+    const result = sut.process(body) as RegisterController.Result;
     expect(result.statusCode).toEqual(statusCode);
     expect(result.error).toStrictEqual(error);
   }

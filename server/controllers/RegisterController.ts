@@ -1,23 +1,26 @@
 import InternalServerError from "../errors/InternalServerError";
-import InvalidEmailError from "../errors/InvalidEmailError";
 import Validation from "../validators/Validation";
 
 export interface Encryptor {
-  crypt: (password: string) => void
+  crypt: (password: string) => string
+}
+
+export interface UserStore {
+  save: (user: { email: string, password: string }) => void
 }
 
 class RegisterController {
   constructor(
     private readonly validation: Validation,
     private readonly encryptor: Encryptor,
+    private readonly store: UserStore,
   ) { }
 
-  process(body: any): RegisterController.Result {
+  process(body: any): RegisterController.Result | undefined {
     try {
       this.validation.validate(body)
-      this.encryptor.crypt(body['password'])
-
-      return { statusCode: 400, error: new InvalidEmailError() };
+      const hashedPassword = this.encryptor.crypt(body['password'])
+      this.store.save({ email: body['email'], password: hashedPassword })
     } catch (error) {
       if (error instanceof InternalServerError) {
         return { statusCode: 500, error };

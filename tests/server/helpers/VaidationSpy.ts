@@ -1,6 +1,6 @@
 import Validation from "../../../server/validators/Validation"
 
-export default class RegisterControllerValidationSpy implements Validation {
+export default class ValidationSpy implements Validation {
   bodyToValidate: any
   toThrow?: Error
 
