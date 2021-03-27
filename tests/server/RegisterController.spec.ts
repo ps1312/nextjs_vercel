@@ -2,7 +2,7 @@ import RegisterController from "../../server/controllers/RegisterController";
 import InternalServerError from "../../server/errors/InternalServerError";
 import EncryptorSpy from "./helpers/EncryptorSpy";
 import UserStoreSpy from "./helpers/UserStoreSpy";
-import ValidationSpy from "./helpers/VaidationSpy";
+import ValidationSpy from "./helpers/ValidationSpy";
 
 describe("RegisterController.ts", () => {
   it('should call validation with provided body', () => {
