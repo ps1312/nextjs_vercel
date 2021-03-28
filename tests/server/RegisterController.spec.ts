@@ -60,6 +60,20 @@ describe("RegisterController.ts", () => {
     expectError(sut, makeBody(), new InternalServerError(), 500)
   })
 
+  it('should return SUCCESS status and newly created user on happy path', () => {
+    const [sut, _, _e, store] = makeSUT();
+    const body = makeBody()
+    const expectedUser = {
+      id: 1,
+      email: body.email,
+    }
+    store.completeWithSuccess(expectedUser)
+
+    const result = sut.process(body)
+    expect(result?.statusCode).toEqual(201)
+    expect(result?.body).toStrictEqual(expectedUser)
+  })
+
   function makeSUT(): [sut: RegisterController, validation: ValidationSpy, encryptor: EncryptorSpy, store: UserStoreSpy] {
     const validation = new ValidationSpy()
     const encryptor = new EncryptorSpy()

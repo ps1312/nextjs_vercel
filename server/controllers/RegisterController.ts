@@ -6,7 +6,7 @@ export interface Encryptor {
 }
 
 export interface UserStore {
-  save: (user: { email: string, password: string }) => Error | undefined
+  save: (user: { email: string, password: string }) => Error | { id: number, email: string }
 }
 
 class RegisterController {
@@ -16,9 +16,8 @@ class RegisterController {
     private readonly store: UserStore,
   ) { }
 
-  process(body: any): RegisterController.Result | undefined {
+  process(body: any): RegisterController.Result {
     const validationError = this.validation.validate(body)
-
     if (validationError) {
       return { statusCode: 400, error: validationError };
     }
@@ -33,12 +32,12 @@ class RegisterController {
       return { statusCode: 500, error: new InternalServerError() };
     }
 
-    return undefined
+    return { statusCode: 201, body: user }
   }
 }
 
 module RegisterController {
-  export type Result = { statusCode: number; error: Error };
+  export type Result = { statusCode: number; error?: Error, body?: any };
 }
 
 export default RegisterController;
