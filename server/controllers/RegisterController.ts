@@ -2,11 +2,11 @@ import InternalServerError from "../errors/InternalServerError";
 import Validation from "../validators/Validation";
 
 export interface Encryptor {
-  crypt: (password: string) => string
+  crypt: (password: string) => Error | string
 }
 
 export interface UserStore {
-  save: (user: { email: string, password: string }) => void
+  save: (user: { email: string, password: string }) => Error | undefined
 }
 
 class RegisterController {
@@ -17,17 +17,23 @@ class RegisterController {
   ) { }
 
   process(body: any): RegisterController.Result | undefined {
-    try {
-      this.validation.validate(body)
-      const hashedPassword = this.encryptor.crypt(body['password'])
-      this.store.save({ email: body['email'], password: hashedPassword })
-    } catch (error) {
-      if (error instanceof InternalServerError) {
-        return { statusCode: 500, error };
-      }
+    const validationError = this.validation.validate(body)
 
-      return { statusCode: 400, error };
+    if (validationError) {
+      return { statusCode: 400, error: validationError };
     }
+
+    const hashedPassword = this.encryptor.crypt(body['password'])
+    if (hashedPassword instanceof Error) {
+      return { statusCode: 500, error: new InternalServerError() };
+    }
+
+    const user = this.store.save({ email: body['email'], password: hashedPassword })
+    if (user instanceof Error) {
+      return { statusCode: 500, error: new InternalServerError() };
+    }
+
+    return undefined
   }
 }
 

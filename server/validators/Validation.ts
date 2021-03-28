@@ -1,3 +1,3 @@
 export default interface Validation {
-  validate: (body: any) => void
+  validate: (body: any) => Error | undefined
 }

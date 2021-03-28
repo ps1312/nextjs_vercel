@@ -53,6 +53,13 @@ describe("RegisterController.ts", () => {
     expect(store.userToStore).toStrictEqual(expectedUser)
   })
 
+  it('should return INTERNAL SERVER ERROR status and InternalServerError on user store failure', () => {
+    const [sut, _v, _e, store] = makeSUT();
+    store.completeWith(anyError())
+
+    expectError(sut, makeBody(), new InternalServerError(), 500)
+  })
+
   function makeSUT(): [sut: RegisterController, validation: ValidationSpy, encryptor: EncryptorSpy, store: UserStoreSpy] {
     const validation = new ValidationSpy()
     const encryptor = new EncryptorSpy()

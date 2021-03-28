@@ -1,15 +1,14 @@
 import { Encryptor } from "../../../server/controllers/RegisterController"
-import InternalServerError from "../../../server/errors/InternalServerError"
 
 export default class EncryptorSpy implements Encryptor {
   passwordToEncrypt?: string
   toThrow?: Error
   hashedPassword?: string
 
-  crypt(password: string): string {
+  crypt(password: string): Error | string {
     this.passwordToEncrypt = password
     if (this.toThrow) {
-      throw new InternalServerError()
+      return this.toThrow
     } else {
       return this.hashedPassword!
     }
