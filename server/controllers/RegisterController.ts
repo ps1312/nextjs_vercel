@@ -5,8 +5,23 @@ export interface Encryptor {
   crypt: (password: string) => Error | string
 }
 
+type SaveUserModel = {
+  email: string;
+  password: string;
+}
+
+type UserModel = {
+  id: number;
+  email: string;
+}
+
 export interface UserStore {
-  save: (user: { email: string, password: string }) => Error | { id: number, email: string }
+  save: (user: SaveUserModel) => UserModel | Error
+}
+
+type RegisterUserParams = {
+  email: string;
+  password: string;
 }
 
 class RegisterController {
@@ -22,12 +37,16 @@ class RegisterController {
       return { statusCode: 400, error: validationError };
     }
 
-    const hashedPassword = this.encryptor.crypt(body['password'])
+    const { email, password } = body as RegisterUserParams
+
+    const hashedPassword = this.encryptor.crypt(password)
     if (hashedPassword instanceof Error) {
       return { statusCode: 500, error: new InternalServerError() };
     }
 
-    const user = this.store.save({ email: body['email'], password: hashedPassword })
+    const saveUserModel = { email, password: hashedPassword }
+
+    const user = this.store.save(saveUserModel)
     if (user instanceof Error) {
       return { statusCode: 500, error: new InternalServerError() };
     }
