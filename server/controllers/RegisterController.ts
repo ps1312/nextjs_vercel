@@ -26,18 +26,12 @@ type RegisterUserParams = {
 
 class RegisterController {
   constructor(
-    private readonly validation: Validation,
     private readonly encryptor: Encryptor,
     private readonly store: UserStore,
   ) { }
 
-  process(body: any): RegisterController.Result {
-    const validationError = this.validation.validate(body)
-    if (validationError) {
-      return { statusCode: 400, error: validationError };
-    }
-
-    const { email, password } = body as RegisterUserParams
+  process(body: RegisterUserParams): RegisterController.Result {
+    const { email, password } = body
 
     const hashedPassword = this.encryptor.crypt(password)
     if (hashedPassword instanceof Error) {

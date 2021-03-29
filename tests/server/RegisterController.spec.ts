@@ -2,28 +2,10 @@ import RegisterController from "../../server/controllers/RegisterController";
 import InternalServerError from "../../server/errors/InternalServerError";
 import EncryptorSpy from "./helpers/EncryptorSpy";
 import UserStoreSpy from "./helpers/UserStoreSpy";
-import ValidationSpy from "./helpers/ValidationSpy";
 
 describe("RegisterController.ts", () => {
-  it('should call validation with provided body', () => {
-    const [sut, validation] = makeSUT();
-
-    const body = makeBody()
-    sut.process(body)
-
-    expect(validation.bodyToValidate).toStrictEqual(body)
-  })
-
-  it("should return BAD REQUEST on validation error", () => {
-    const [sut, validation] = makeSUT();
-    const expectedError = anyError()
-    validation.completeWith(expectedError)
-
-    expectError(sut, makeBody(), expectedError, 400)
-  });
-
   it('should call encryptor with provided password', () => {
-    const [sut, _, encryptor] = makeSUT();
+    const [sut, encryptor] = makeSUT();
 
     const body = makeBody()
     sut.process(makeBody())
@@ -32,14 +14,14 @@ describe("RegisterController.ts", () => {
   })
 
   it('should return INTERNAL SERVER ERROR status and InternalServerError on password encryption failure', () => {
-    const [sut, _, encryptor] = makeSUT();
+    const [sut, encryptor] = makeSUT();
     encryptor.completeWith(anyError())
 
     expectError(sut, makeBody(), new InternalServerError(), 500)
   })
 
   it('should call userStore with provided email and encrypted password', () => {
-    const [sut, _, encryptor, store] = makeSUT();
+    const [sut, encryptor, store] = makeSUT();
     const body = makeBody()
     const hashedPassword = 'any-hashed-password'
     encryptor.completeWithSuccess(hashedPassword)
@@ -54,14 +36,14 @@ describe("RegisterController.ts", () => {
   })
 
   it('should return INTERNAL SERVER ERROR status and InternalServerError on user store failure', () => {
-    const [sut, _v, _e, store] = makeSUT();
+    const [sut, _e, store] = makeSUT();
     store.completeWith(anyError())
 
     expectError(sut, makeBody(), new InternalServerError(), 500)
   })
 
   it('should return SUCCESS status and newly created user on happy path', () => {
-    const [sut, _, _e, store] = makeSUT();
+    const [sut, _e, store] = makeSUT();
     const body = makeBody()
     const expectedUser = {
       id: 1,
@@ -74,15 +56,13 @@ describe("RegisterController.ts", () => {
     expect(result?.body).toStrictEqual(expectedUser)
   })
 
-  function makeSUT(): [sut: RegisterController, validation: ValidationSpy, encryptor: EncryptorSpy, store: UserStoreSpy] {
-    const validation = new ValidationSpy()
+  function makeSUT(): [sut: RegisterController, encryptor: EncryptorSpy, store: UserStoreSpy] {
     const encryptor = new EncryptorSpy()
     const store = new UserStoreSpy()
-    const sut = new RegisterController(validation, encryptor, store);
+    const sut = new RegisterController(encryptor, store);
 
-    return [sut, validation, encryptor, store]
+    return [sut, encryptor, store]
   }
-
 
   function expectError(sut: RegisterController, body: any, error: Error, statusCode: number) {
     const result = sut.process(body) as RegisterController.Result;
