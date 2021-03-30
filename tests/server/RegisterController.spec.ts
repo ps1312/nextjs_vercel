@@ -4,6 +4,16 @@ import UserStoreSpy from "./helpers/UserStoreSpy";
 import ValidationSpy from "./helpers/ValidationSpy";
 
 describe("RegisterController.ts", () => {
+  it('should call validation with provided body', () => {
+    const [sut, validation] = makeSUT();
+    const body = makeSaveUserModel()
+    const spy = jest.spyOn(validation, 'validate').mockReturnValueOnce(new Error())
+
+    sut.process(body)
+
+    expect(spy).toHaveBeenCalledWith(body)
+  })
+
   it('should return BAD REQUEST o validation error', () => {
     const [sut, validation] = makeSUT();
     const expectedError = new Error()
