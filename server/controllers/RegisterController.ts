@@ -1,4 +1,5 @@
 import InternalServerError from "../errors/InternalServerError"
+import Validation from "../validators/Validation";
 
 export interface Encryptor {
   crypt: (password: string) => Error | string
@@ -20,10 +21,22 @@ export interface UserStore {
 
 class RegisterController {
   constructor(
+    private readonly validation: Validation,
     private readonly store: UserStore,
   ) { }
 
-  process(saveUserModel: SaveUserModel): RegisterController.Result {
+  process(body: any): RegisterController.Result {
+    const error = this.validation.validate(body)
+
+    if (error) {
+      return { statusCode: 400, error }
+    }
+
+    const saveUserModel: SaveUserModel = {
+      email: body.email,
+      password: body.password,
+    }
+
     const user = this.store.save(saveUserModel)
 
     if (user instanceof Error) {
