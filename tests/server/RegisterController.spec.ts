@@ -1,47 +1,37 @@
-import RegisterController, { RegisterUserParams } from "../../server/controllers/RegisterController";
+import RegisterController, { SaveUserModel } from "../../server/controllers/RegisterController";
 import InternalServerError from "../../server/errors/InternalServerError";
 import UserStoreSpy from "./helpers/UserStoreSpy";
 
 describe("RegisterController.ts", () => {
-  it('should return BAD REQUEST when passwords do not match', () => {
-    const [sut] = makeSUT()
-    const nonMatchingPasswordBody = makeBody({ passwordConfirmation: 'another-password' })
-
-    expectError(sut, nonMatchingPasswordBody, new InternalServerError(), 400)
-  })
-
   it('should call userStore with provided email and password', () => {
     const [sut, store] = makeSUT();
-    const body = makeBody()
+    const saveUserModel = makeSaveUserModel()
 
-    sut.process(makeBody())
+    sut.process(saveUserModel)
 
-    const expectedUser = {
-      email: body['email'],
-      password: body['password'],
-    }
-    expect(store.userToStore).toStrictEqual(expectedUser)
+    expect(store.userToStore).toStrictEqual(saveUserModel)
   })
 
   it('should return INTERNAL SERVER ERROR status and InternalServerError on user store failure', () => {
     const [sut, store] = makeSUT();
     store.completeWith(anyError())
 
-    expectError(sut, makeBody(), new InternalServerError(), 500)
+    const result = sut.process(makeSaveUserModel())
+
+    expect(result.statusCode).toEqual(500)
+    expect(result.error).toStrictEqual(new InternalServerError())
   })
 
-  it('should return SUCCESS status and newly created user on happy path', () => {
+  it('should return SUCCESS status and newly created user on save success', () => {
     const [sut, store] = makeSUT();
-    const body = makeBody()
-    const expectedUser = {
-      id: 1,
-      email: body.email,
-    }
-    store.completeWithSuccess(expectedUser)
+    const body = makeSaveUserModel()
+    const saveUserStub = { id: 1, email: body.email }
+    store.completeWithSuccess(saveUserStub)
 
     const result = sut.process(body)
-    expect(result?.statusCode).toEqual(201)
-    expect(result?.body).toStrictEqual(expectedUser)
+
+    expect(result.statusCode).toEqual(201)
+    expect(result.body).toStrictEqual(saveUserStub)
   })
 
   function makeSUT(): [sut: RegisterController, store: UserStoreSpy] {
@@ -61,11 +51,10 @@ describe("RegisterController.ts", () => {
     return new Error()
   }
 
-  function makeBody(overrides: any = undefined): RegisterUserParams {
+  function makeSaveUserModel(overrides: any = undefined): SaveUserModel {
     return {
       email: 'any-email@mail.com',
       password: 'any password',
-      passwordConfirmation: 'any password',
       ...overrides
     }
   }
