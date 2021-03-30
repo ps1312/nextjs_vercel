@@ -1,7 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import RegisterController from '../../server/controllers/RegisterController';
 import PasswordMatchError from '../../server/errors/PasswordMatchError';
+import InMemoryUserStore from '../../server/store/InMemoryUserStore';
 import MissingParamsValidator from '../../server/validators/MissingParamsValidator';
+
+const inMemoryUserStore = new InMemoryUserStore()
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   const requiredParams = ['email', 'password', 'passwordConfirmation']
@@ -14,7 +17,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return res.status(400).json(new PasswordMatchError())
   }
 
-  // const registerController  = new RegisterController()
-  // const  user = registerController.process()
-  // return res.status(201).json({ user })
+  const registerController  = new RegisterController(inMemoryUserStore)
+  const  user = registerController.process(req.body)
+  return res.status(201).json({ user })
 };
